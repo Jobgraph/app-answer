@@ -28,17 +28,19 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => { loadConfig().then(setConfig); }, []);
   if (!config) return null;
 
   async function send() {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
     const userMsg: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMsg]);
     const question = input;
     setInput('');
     setLoading(true);
+    setError('');
     try {
       if (config!.deploymentId === 'local') {
         await new Promise((r) => setTimeout(r, 1000));
@@ -48,11 +50,13 @@ export default function App() {
           `https://app.jobgraph.com/api/apps/${config!.deploymentId}/process`,
           { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: question, type: 'answer', history: messages }) }
         );
+        if (!res.ok) throw new Error(`Request failed (${res.status})`);
         const data = await res.json();
-        setMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: data.answer ?? 'No response received.' }]);
       }
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally { setLoading(false); }
   }
 
   return (
@@ -79,12 +83,15 @@ export default function App() {
               <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white/50">Thinking...</div>
             </div>
           )}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">{error}</div>
+          )}
         </div>
         <div className="flex gap-3">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             placeholder="Ask a question..."
             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />

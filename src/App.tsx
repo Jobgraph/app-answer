@@ -6,23 +6,6 @@ interface Message {
   content: string;
 }
 
-const CANNED_ANSWERS: Record<string, string> = {
-  'default': "I don't have specific information about that in the knowledge base yet. Once connected to your data sources, I'll be able to provide accurate answers based on your documentation.",
-  'refund': "Our refund policy allows full refunds within 30 days of purchase. After 30 days, we offer pro-rated refunds for annual subscriptions. To request a refund, contact support@example.com with your order number.",
-  'hours': "Our support team is available Monday to Friday, 9:00 AM to 6:00 PM GMT. For urgent issues outside these hours, use the emergency contact form on our website.",
-  'pricing': "We offer three tiers: Starter (£29/month, up to 5 users), Professional (£79/month, up to 25 users), and Enterprise (custom pricing, unlimited users). All plans include a 14-day free trial.",
-  'integration': "We integrate with Slack, Microsoft Teams, Salesforce, HubSpot, and Jira out of the box. Custom integrations are available via our REST API and webhooks. See docs.example.com/integrations for setup guides.",
-};
-
-function getAnswer(question: string): string {
-  const q = question.toLowerCase();
-  if (q.includes('refund') || q.includes('money back')) return CANNED_ANSWERS['refund'];
-  if (q.includes('hours') || q.includes('available') || q.includes('support')) return CANNED_ANSWERS['hours'];
-  if (q.includes('price') || q.includes('pricing') || q.includes('cost') || q.includes('plan')) return CANNED_ANSWERS['pricing'];
-  if (q.includes('integrat') || q.includes('connect') || q.includes('slack') || q.includes('api')) return CANNED_ANSWERS['integration'];
-  return CANNED_ANSWERS['default'];
-}
-
 export default function App() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,6 +16,18 @@ export default function App() {
   useEffect(() => { loadConfig().then(setConfig); }, []);
   if (!config) return null;
 
+  if (!config.isConfigured) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="text-center max-w-md space-y-4">
+          <h1 className="text-2xl font-semibold">{config.appName}</h1>
+          <p className="text-white/60">This app is not configured. Deploy it from Jobgraph to get started.</p>
+          <a href="https://app.jobgraph.com" className="inline-block px-4 py-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition-colors">Go to Jobgraph</a>
+        </div>
+      </div>
+    );
+  }
+
   async function send() {
     if (!input.trim() || loading) return;
     const userMsg: Message = { role: 'user', content: input };
@@ -42,18 +37,13 @@ export default function App() {
     setLoading(true);
     setError('');
     try {
-      if (config!.deploymentId === 'local') {
-        await new Promise((r) => setTimeout(r, 1000));
-        setMessages(prev => [...prev, { role: 'assistant', content: getAnswer(question) }]);
-      } else {
-        const res = await fetch(
-          `https://app.jobgraph.com/api/apps/${config!.deploymentId}/process`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: question, type: 'answer', history: messages }) }
-        );
-        if (!res.ok) throw new Error(`Request failed (${res.status})`);
-        const data = await res.json();
-        setMessages(prev => [...prev, { role: 'assistant', content: data.answer ?? 'No response received.' }]);
-      }
+      const res = await fetch(
+        `https://app.jobgraph.com/api/apps/${config!.deploymentId}/process`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: question, type: 'answer', history: messages }) }
+      );
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = await res.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.answer ?? 'No response received.' }]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally { setLoading(false); }

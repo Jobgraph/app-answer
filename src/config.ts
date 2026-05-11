@@ -6,6 +6,7 @@ export interface AppConfig {
   logoUrl: string | null;
   systemPrompt: string;
   capabilities: string[];
+  isConfigured: boolean;
 }
 
 const DEFAULTS: AppConfig = {
@@ -16,6 +17,7 @@ const DEFAULTS: AppConfig = {
   logoUrl: null,
   systemPrompt: 'You are a knowledge base assistant that answers questions accurately.',
   capabilities: ['knowledge-base'],
+  isConfigured: false,
 };
 
 export async function loadConfig(): Promise<AppConfig> {
@@ -24,7 +26,7 @@ export async function loadConfig(): Promise<AppConfig> {
   try {
     const res = await fetch(`https://app.jobgraph.com/api/apps/${id}/config`);
     if (!res.ok) return DEFAULTS;
-    return { ...DEFAULTS, ...await res.json() };
+    return { ...DEFAULTS, ...await res.json(), deploymentId: id, isConfigured: true };
   } catch {
     return DEFAULTS;
   }

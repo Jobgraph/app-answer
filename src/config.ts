@@ -22,12 +22,12 @@ const DEFAULTS: AppConfig = {
 
 export async function loadConfig(): Promise<AppConfig> {
   const id = import.meta.env.VITE_DEPLOYMENT_ID;
-  if (!id) return { ...DEFAULTS, isConfigured: true };
+  if (!id) return DEFAULTS;
   try {
     const res = await fetch(`https://app.jobgraph.com/api/apps/${id}/config`);
-    if (!res.ok) return { ...DEFAULTS, deploymentId: id };
-    return { ...DEFAULTS, ...await res.json(), deploymentId: id };
+    if (!res.ok) return DEFAULTS;
+    return { ...DEFAULTS, ...await res.json(), deploymentId: id, isConfigured: true };
   } catch {
-    return { ...DEFAULTS, deploymentId: id };
+    return DEFAULTS;
   }
 }

@@ -16,7 +16,7 @@ export default function App() {
   useEffect(() => { loadConfig().then(setConfig); }, []);
   if (!config) return null;
 
-  if (config.deploymentId !== 'local' && !config.isConfigured) {
+  if (!config.isConfigured) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6">
         <div className="text-center max-w-md space-y-4">

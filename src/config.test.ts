@@ -14,7 +14,7 @@ describe('loadConfig', () => {
 
   it('fetches config from API when VITE_DEPLOYMENT_ID is set', async () => {
     vi.stubEnv('VITE_DEPLOYMENT_ID', 'test-id')
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ orgName: 'Test Org', brandColour: '#ff0000' }),
     }) as any
@@ -26,7 +26,7 @@ describe('loadConfig', () => {
 
   it('falls back to defaults when API call fails', async () => {
     vi.stubEnv('VITE_DEPLOYMENT_ID', 'test-id')
-    global.fetch = vi.fn().mockRejectedValue(new Error('Network error')) as any
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error')) as any
     const config = await loadConfig()
     expect(config.deploymentId).toBe('local')
     expect(config.isConfigured).toBe(false)
@@ -34,7 +34,7 @@ describe('loadConfig', () => {
 
   it('falls back to defaults when API returns non-200', async () => {
     vi.stubEnv('VITE_DEPLOYMENT_ID', 'test-id')
-    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 }) as any
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 }) as any
     const config = await loadConfig()
     expect(config.deploymentId).toBe('local')
     expect(config.isConfigured).toBe(false)

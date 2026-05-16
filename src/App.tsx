@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ThemeContext } from './lib/theme';
 import type { Message, Conversation } from './lib/types';
 import { getMockAnswer } from './lib/mock';
@@ -25,6 +25,8 @@ export default function App() {
   const [conversations, setConversations] = useState<Conversation[]>(getConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [responding, setResponding] = useState(false);
+  const activeIdRef = useRef<string | null>(null);
+  activeIdRef.current = activeId;
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
   const messages = activeConversation?.messages ?? [];
@@ -62,7 +64,15 @@ export default function App() {
       setActiveId(conversation.id);
       setResponding(true);
 
+      const pendingConversationId = conversation.id;
+
       setTimeout(() => {
+        // Guard: if the user switched conversations, don't clobber state
+        if (activeIdRef.current !== pendingConversationId) {
+          setResponding(false);
+          return;
+        }
+
         const answer = getMockAnswer(text);
         const assistantMessage: Message = {
           id: uid(),
@@ -71,9 +81,19 @@ export default function App() {
           timestamp: new Date().toISOString(),
         };
 
+        // Re-read fresh conversation data instead of using the stale closure
+        const freshConversations = getConversations();
+        const freshConversation = freshConversations.find(
+          (c) => c.id === pendingConversationId,
+        );
+        if (!freshConversation) {
+          setResponding(false);
+          return;
+        }
+
         const updated: Conversation = {
-          ...conversation,
-          messages: [...conversation.messages, assistantMessage],
+          ...freshConversation,
+          messages: [...freshConversation.messages, assistantMessage],
         };
         updateConversation(updated);
         setConversations(getConversations());

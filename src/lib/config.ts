@@ -30,6 +30,13 @@ export function _resetCache() { cached = null; }
 
 export async function loadConfig(): Promise<AppConfig> {
   if (cached) return cached;
+  // Cloudflare Worker injects config at the edge — use it directly
+  const injected = (window as unknown as { __JOBGRAPH_CONFIG__?: Partial<AppConfig> }).__JOBGRAPH_CONFIG__;
+  if (injected?.deploymentId) {
+    cached = { ...DEFAULTS, ...injected, isConfigured: true };
+    return cached;
+  }
+  // Local dev fallback: fetch via VITE_DEPLOYMENT_ID
   const id = import.meta.env.VITE_DEPLOYMENT_ID;
   if (!id) {
     cached = DEFAULTS;

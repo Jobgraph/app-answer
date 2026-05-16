@@ -1,3 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
-:root { color-scheme: dark; }
-body { background: #0a0a0a; color: #fafafa; font-family: system-ui, sans-serif; }
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(20 6% 10%);
+  --color-card: hsl(30 20% 98%);
+  --color-card-foreground: hsl(20 6% 10%);
+  --color-muted: hsl(30 20% 95%);
+  --color-muted-foreground: hsl(20 6% 40%);
+  --color-border: hsl(30 15% 90%);
+  --color-input: hsl(30 15% 90%);
+  --color-primary: hsl(18 61% 57%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(30 30% 96%);
+  --color-secondary-foreground: hsl(20 6% 10%);
+  --color-accent: hsl(18 61% 57%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-ring: hsl(18 61% 57%);
+  --radius: 0.75rem;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+.dark {
+  --color-background: hsl(220 15% 7%);
+  --color-foreground: hsl(0 0% 96%);
+  --color-card: hsl(220 15% 10%);
+  --color-card-foreground: hsl(0 0% 96%);
+  --color-muted: hsl(220 12% 14%);
+  --color-muted-foreground: hsl(220 10% 55%);
+  --color-border: hsl(220 12% 18%);
+  --color-input: hsl(220 12% 18%);
+  --color-primary: hsl(18 61% 57%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(220 12% 14%);
+  --color-secondary-foreground: hsl(0 0% 96%);
+  --color-accent: hsl(18 61% 57%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-ring: hsl(18 61% 57%);
+}
+
+* { border-color: var(--color-border); }
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-foreground);
+  font-weight: 800;
+  line-height: 1.2;
+}

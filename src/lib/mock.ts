@@ -11,9 +11,9 @@ const ANSWERS: Record<string, string> = {
 export function getMockAnswer(question: string): string {
   const q = question.toLowerCase();
   if (q.includes('refund') || q.includes('money back')) return ANSWERS.refund;
+  if (q.includes('integrat') || q.includes('connect') || q.includes('slack') || q.includes('api')) return ANSWERS.integration;
   if (q.includes('hours') || q.includes('available') || q.includes('support')) return ANSWERS.hours;
   if (q.includes('price') || q.includes('pricing') || q.includes('cost') || q.includes('plan')) return ANSWERS.pricing;
-  if (q.includes('integrat') || q.includes('connect') || q.includes('slack') || q.includes('api')) return ANSWERS.integration;
   if (q.includes('secur') || q.includes('encrypt') || q.includes('gdpr') || q.includes('soc')) return ANSWERS.security;
   if (q.includes('start') || q.includes('onboard') || q.includes('setup') || q.includes('begin')) return ANSWERS.onboarding;
   return ANSWERS.default;

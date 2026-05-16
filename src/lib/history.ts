@@ -20,7 +20,8 @@ export function addConversation(c: Conversation) {
 export function updateConversation(c: Conversation) {
   const all = getConversations();
   const idx = all.findIndex(x => x.id === c.id);
-  if (idx !== -1) all[idx] = c; else all.unshift(c);
+  if (idx === -1) return;  // was deleted, don't re-add
+  all[idx] = c;
   save(all);
 }
 

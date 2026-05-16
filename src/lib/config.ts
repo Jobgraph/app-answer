@@ -38,14 +38,16 @@ export async function loadConfig(): Promise<AppConfig> {
   try {
     const res = await fetch(`https://app.jobgraph.com/api/apps/${id}/config`);
     if (!res.ok) {
-      cached = DEFAULTS;
-      return DEFAULTS;
+      const fallback = { ...DEFAULTS, deploymentId: id };
+      cached = fallback;
+      return fallback;
     }
     const result: AppConfig = { ...DEFAULTS, ...(await res.json()), deploymentId: id, isConfigured: true };
     cached = result;
     return result;
   } catch {
-    cached = DEFAULTS;
-    return DEFAULTS;
+    const fallback = { ...DEFAULTS, deploymentId: id };
+    cached = fallback;
+    return fallback;
   }
 }

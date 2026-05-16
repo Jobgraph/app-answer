@@ -24,19 +24,19 @@ describe('loadConfig', () => {
     expect(config.isConfigured).toBe(true)
   })
 
-  it('falls back to defaults when API call fails', async () => {
+  it('falls back to defaults but preserves deploymentId when API call fails', async () => {
     vi.stubEnv('VITE_DEPLOYMENT_ID', 'test-id')
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error')) as any
     const config = await loadConfig()
-    expect(config.deploymentId).toBe('local')
+    expect(config.deploymentId).toBe('test-id')
     expect(config.isConfigured).toBe(false)
   })
 
-  it('falls back to defaults when API returns non-200', async () => {
+  it('falls back to defaults but preserves deploymentId when API returns non-200', async () => {
     vi.stubEnv('VITE_DEPLOYMENT_ID', 'test-id')
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 }) as any
     const config = await loadConfig()
-    expect(config.deploymentId).toBe('local')
+    expect(config.deploymentId).toBe('test-id')
     expect(config.isConfigured).toBe(false)
   })
 })

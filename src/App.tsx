@@ -85,10 +85,12 @@ export default function App() {
 
   const handleSelect = useCallback((id: string) => {
     setActiveId(id);
+    setResponding(false);
   }, []);
 
   const handleNew = useCallback(() => {
     setActiveId(null);
+    setResponding(false);
   }, []);
 
   const handleDelete = useCallback(

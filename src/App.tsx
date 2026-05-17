@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ThemeContext } from './lib/theme';
 import type { Message, Conversation } from './lib/types';
 import { getMockAnswer } from './lib/mock';
+import { processInput } from './lib/api';
 import {
   getConversations,
   addConversation,
@@ -25,8 +26,15 @@ export default function App() {
   const [conversations, setConversations] = useState<Conversation[]>(getConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [responding, setResponding] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const activeIdRef = useRef<string | null>(null);
   activeIdRef.current = activeId;
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
   const messages = activeConversation?.messages ?? [];
@@ -66,14 +74,13 @@ export default function App() {
 
       const pendingConversationId = conversation.id;
 
-      setTimeout(() => {
+      const appendAssistant = (answer: string) => {
         // Guard: if the user switched conversations, don't clobber state
         if (activeIdRef.current !== pendingConversationId) {
           setResponding(false);
           return;
         }
 
-        const answer = getMockAnswer(text);
         const assistantMessage: Message = {
           id: uid(),
           role: 'assistant',
@@ -98,9 +105,28 @@ export default function App() {
         updateConversation(updated);
         setConversations(getConversations());
         setResponding(false);
-      }, 800);
+      };
+
+      if (config && config.isConfigured && config.deploymentId !== 'local') {
+        processInput(config, text)
+          .then((response) => {
+            appendAssistant(response.result);
+          })
+          .catch((err: Error) => {
+            setResponding(false);
+            if (err.message === 'RATE_LIMITED') {
+              setToast('Too many requests. Please wait a moment and try again.');
+            } else {
+              setToast(err.message || 'Something went wrong. Please try again.');
+            }
+          });
+      } else {
+        setTimeout(() => {
+          appendAssistant(getMockAnswer(text));
+        }, 800);
+      }
     },
-    [activeConversation, responding],
+    [activeConversation, responding, config],
   );
 
   const handleSelect = useCallback((id: string) => {
@@ -173,6 +199,15 @@ export default function App() {
           brandColour={config.brandColour}
         />
       </AppShell>
+
+      {toast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div className="bg-destructive text-destructive-foreground rounded-lg px-4 py-3 text-sm shadow-lg flex items-center justify-between gap-3">
+            <span>{toast}</span>
+            <button onClick={() => setToast(null)} className="shrink-0 opacity-70 hover:opacity-100 transition-opacity font-bold">&times;</button>
+          </div>
+        </div>
+      )}
     </ThemeContext>
   );
 }
